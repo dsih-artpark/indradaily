@@ -34,7 +34,7 @@ def send_email(recipients: dict, subject: str, body: str, config: dict,
     message.attach(MIMEText(body, "plain"))
 
     if attachment:
-        
+
         logger.info(f"Attaching file: {attachment_path}")
 
         try:
@@ -43,7 +43,7 @@ def send_email(recipients: dict, subject: str, body: str, config: dict,
                 part.set_payload(attachment.read())
 
             encoders.encode_base64(part)
-            
+
             attachment_name = attachment_path.replace("/", "_")
             part.add_header(
                 "Content-Disposition",
