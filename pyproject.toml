@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "indradaily"
+version = "0.1.0"
+description = ""
+authors = ["Sneha S <sneha@artpark.in>, Aishwarya R <aishwarya@artpark.in>"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+indrafetch = {git = "https://github.com/dsih-artpark/indrafetch.git"}
+python-dotenv = "^1.0.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.31.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "FLY", "RUF", "B", "ICN"]
+
+[tool.ruff]
+line-length = 140
