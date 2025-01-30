@@ -100,6 +100,7 @@ def main(yaml_path: str, current_month: bool=True, direct_upload: bool=False):
                                           check_credentials=False
                                          )
     no_files = len(list(region_specific_output_dir.glob('*.nc')))
+    load_dotenv()
     upload_success = indrafetch.upload_cds_data_to_s3(upload_dir=region_specific_output_dir, region=params['region'],
                                                       Bucket=params['s3_bucket'], Prefix=params['s3_prefix'])
 
@@ -107,7 +108,5 @@ def main(yaml_path: str, current_month: bool=True, direct_upload: bool=False):
 
 
 if __name__ == "__main__":
-    # upload_success, no_files, latest_timestamp = main(yaml_path=YAML_PATH)
-    # draft_and_send_email(upload_success=upload_success, yaml_path=YAML_PATH, no_files=no_files, latest_timestamp=latest_timestamp)
-    latest_timestamp = indrafetch.last_date_of_cds_data()[0]
-    draft_and_send_email(upload_success=False, yaml_path=YAML_PATH, no_files=0, latest_timestamp=latest_timestamp)
+    upload_success, no_files, latest_timestamp = main(yaml_path=YAML_PATH)
+    draft_and_send_email(upload_success=upload_success, yaml_path=YAML_PATH, no_files=no_files, latest_timestamp=latest_timestamp)

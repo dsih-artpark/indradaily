@@ -34,24 +34,25 @@ def send_email(recipients: dict, subject: str, body: str, config: dict,
     message.attach(MIMEText(body, "plain"))
 
     if attachment:
-        filename = attachment_path
-        logger.info(f"Attaching file: {filename}")
+        
+        logger.info(f"Attaching file: {attachment_path}")
 
         try:
-            with open(filename, "rb") as attachment:
+            with open(attachment_path, "rb") as attachment:
                 part = MIMEBase("application", "octet-stream")
                 part.set_payload(attachment.read())
 
             encoders.encode_base64(part)
-
+            
+            attachment_name = attachment_path.replace("/", "_")
             part.add_header(
                 "Content-Disposition",
-                f"attachment; filename= {filename.replace("/", "_")}",
+                f"attachment; filename= {attachment_name}",
             )
 
             message.attach(part)
         except Exception as e:
-            logger.error(f"Failed to attach file: {e}")
+            logger.error(f"Failed to attach file {attachment_path}: {e}")
             raise
 
     text = message.as_string()
