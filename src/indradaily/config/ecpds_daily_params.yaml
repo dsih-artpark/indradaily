@@ -1,0 +1,18 @@
+url: 'https://data.ecmwf.int/forecasts'
+region: 'global'
+zulu_utc_timestamp: '00z'
+dataset_name: 'ECPDS Operational Forecasts'
+resolution: '0p25'
+model: 'ifs'
+forecast_type: 'oper'
+forecast_times: ["0h", "6h"]
+raise_error: true
+chunk: true
+chunk_size: 1048576
+output_dir: '.dsih-data/ecpds'
+s3_bucket: "dsih-artpark-03-standardised-data"
+s3_prefix: "MW0021DS0079-ECPDS_Operational_Forecasts/00z_ifs_0p25_oper/"
+extensions: ["grib2", "index"]
+email_recipients:
+  "aishwarya@artpark.in": "Aishwarya R"
+  "sneha@artpark.in": "Sneha S"

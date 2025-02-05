@@ -1,11 +1,17 @@
 import logging
+import os
 import smtplib
 import ssl
+from datetime import datetime
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional
+
+from dotenv import load_dotenv
+
+from indradaily import get_params
 
 logger = logging.getLogger(__name__)
 
@@ -68,3 +74,56 @@ def send_email(recipients: dict, subject: str, body: str, config: dict,
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
         raise
+
+
+def draft_and_send_email(upload_success: bool, yaml_path: str, no_files: int,
+                         latest_timestamp: datetime, attachment: bool = False):
+    params = get_params(yaml_path=yaml_path)
+    recipients = params['email_recipients']
+    dataset_name = params['dataset_name']
+    load_dotenv()
+    config = {
+        'SMTP_SERVER': os.getenv('SMTP_SERVER'),
+        'PORT': os.getenv('PORT'),
+        'EMAIL': os.getenv('EMAIL'),
+        'PASSWORD': os.getenv('PASSWORD')
+    }
+
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_month = datetime.now().strftime("%Y-%m")
+    log_file = f"logs/indrafetch-{current_month}-debug.log"
+
+    latest_timestamp = latest_timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    attachment_path = log_file
+
+    if upload_success:
+        status = "SUCCESSFUL"
+        body = (
+            f"Hello,\n"
+            f"This is a system generated email. All {no_files} files obtained from {dataset_name} "
+            f"have been successfully uploaded to S3 on {current_date}.\n"
+            f"The last timestamp of data availability for {dataset_name} is {latest_timestamp} UTC, "
+            f"when checked at approximately {current_timestamp} UTC.\n"
+            f"Detailed health of the run can be found in the debug log file for the "
+            f"current month on the server: {log_file}."
+        )
+    else:
+        status = "FAILED"
+        subject = f"{dataset_name} Daily data upload to S3 failed"
+        body = (
+            f"Hello,\n"
+            f"This is a system generated email. One or more files from {dataset_name} "
+            f"have failed to upload to S3 on {current_date}.\n"
+            f"The last timestamp of data availability for {dataset_name} is {latest_timestamp} UTC, "
+            f"when checked at approximately {current_timestamp} UTC.\n"
+            f"Detailed health of the run can be found in the attached debug log file."
+        )
+        attachment = True
+
+    subject = f"{dataset_name} Daily Data Run {status} on {current_date}"
+    send_email(recipients=recipients, subject=subject, body=body, config=config,
+               attachment=attachment, attachment_path=attachment_path)
+
+    return True
