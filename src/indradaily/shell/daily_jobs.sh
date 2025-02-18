@@ -2,13 +2,13 @@
 set -e  # Exit immediately if a command fails
 
 # Define environment variables
-PROJ_ROOT="${HOME}/jobs/indradaily"
+PROJ_ROOT="${HOME}/code/indradaily"
 CONDA_ROOT="${HOME}/miniconda3"  # Change this if using Anaconda instead
 CONDA_ENV="indradaily_prod"
 CONDA_PYTHON="${CONDA_ROOT}/envs/${CONDA_ENV}/bin/python"
 
 # Change to project directory
-cd "${PROJ_ROOT}/src/indradaily" || exit 1
+cd "${PROJ_ROOT}" || exit 1
 
 # =====================================================
 # Environment Setup Instructions
@@ -26,7 +26,6 @@ cd "${PROJ_ROOT}/src/indradaily" || exit 1
 # To update dependencies:
 #   conda activate ${CONDA_ENV}
 #   poetry update  # Updates to latest versions within constraints
-#
 # To add new dependencies:
 #   poetry add package_name
 #
@@ -35,10 +34,16 @@ cd "${PROJ_ROOT}/src/indradaily" || exit 1
 # =====================================================
 
 # Run CDS daily job
-"${CONDA_PYTHON}" jobs/cds_daily.py -y config/cds_daily_params.yaml
+"${CONDA_PYTHON}" src/indradaily/jobs/cds_daily.py -y ~/.dsih-config/weather-data-jobs.yaml
 
 # Run ECPDS daily job
-"${CONDA_PYTHON}" jobs/ecpds_daily.py -y config/ecpds_daily_params.yaml
+"${CONDA_PYTHON}" src/indradaily/jobs/ecpds_daily.py -y ~/.dsih-config/weather-data-jobs.yaml
 
 # Return to home directory
 cd "${HOME}"
+
+# Set timezone to UTC
+# sudo timedatectl set-timezone UTC
+
+# Run the script every day at 09:00, this command is for crontab
+# * 9 * * * ${HOME}/code/indradaily/src/indradaily/shell/daily_jobs.sh >> daily_jobs.log 2>&1

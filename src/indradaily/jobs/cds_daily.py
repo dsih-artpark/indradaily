@@ -4,39 +4,48 @@ from pathlib import Path
 import indrafetch
 from dotenv import load_dotenv
 from indradaily import get_params, set_custom_loggers
-from indradaily.emails import draft_and_send_email
+from indradaily.emails import data_upload_email
 
 
-def main(*, yaml_path: str, current_month: bool=True, direct_upload: bool=False, log_level: str='DEBUG'):
+def main(*, cds_params: dict, shared_params: dict, current_month: bool=True, direct_upload: bool=False, log_level: str='DEBUG'):
     loggers_config = set_custom_loggers(level=log_level)
     indrafetch.setup_logging(loggers_config=loggers_config, default_level=log_level)
-
-    params = get_params(yaml_path=yaml_path)
 
     latest_timestamp, _ = indrafetch.last_date_of_cds_data()
 
     if current_month:
         start_date = latest_timestamp.strftime("%Y-%m-01")
         end_date = latest_timestamp.strftime("%Y-%m-%d")
-        params["start_date"] = start_date
-        params["end_date"] = end_date
+        cds_params["start_date"] = start_date
+        cds_params["end_date"] = end_date
+    
+    upload_successes = []
+    total_no_files = 0
 
-    region_specific_output_dir = Path(params['output_dir']) / Path(params['region'].upper())
-    region_specific_output_dir.mkdir(parents=True, exist_ok=True)
-    if not direct_upload:
-        indrafetch.retrieve_data_from_cds(bounds_nwse=params['bounds_nwse'][params['region']], variables=list(params['variables'].keys()),
-                                          output_dir=region_specific_output_dir,
-                                          start_date=params["start_date"], end_date=params["end_date"],
-                                          variable_code_dict = params['variables'], region=params['region'],
-                                          check_credentials=False
-                                         )
+    for i, region in enumerate(cds_params['bounds_nwse'].keys()):
+        s3_prefix = f"{cds_params['ds_id']}-{cds_params['ds_name']}/{cds_params['folder_name']}/{region.upper()}"
+        local_region_dir = Path(shared_params['local_data_dir']).expanduser() / Path(shared_params['s3_bucket']) / Path(s3_prefix)
+        local_region_dir.mkdir(parents=True, exist_ok=True)
+        if not direct_upload:
+            indrafetch.retrieve_data_from_cds(bounds_nwse=cds_params['bounds_nwse'][region], variables=list(cds_params['variables'].keys()),
+                                              output_dir=local_region_dir,
+                                              start_date=cds_params["start_date"], end_date=cds_params["end_date"],
+                                              variable_code_dict = cds_params['variables'], region=region,
+                                              check_credentials=False
+                                              )
 
-    no_files = len(list(region_specific_output_dir.glob(f'*.{params["extension"]}')))
-    load_dotenv()
-    upload_success = indrafetch.upload_data_to_s3(upload_dir=region_specific_output_dir, Bucket=params['s3_bucket'],
-                                                  Prefix=f"{params['s3_prefix']}/{params['region'].upper()}", extension=params['extension'])
+        no_files = len(list(local_region_dir.glob(f'*.{cds_params["extension"]}')))
+        load_dotenv()
+        upload_success = indrafetch.upload_data_to_s3(upload_dir=local_region_dir, Bucket=shared_params['s3_bucket'],
+                                                      Prefix=s3_prefix, extension=cds_params['extension'])
 
-    return upload_success, no_files, latest_timestamp
+        upload_successes.append(upload_success)
+        total_no_files += no_files
+
+    if all(upload_successes):
+        return True, total_no_files, latest_timestamp
+    else:
+        return False, total_no_files, latest_timestamp
 
 
 if __name__ == "__main__":
@@ -47,8 +56,13 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--current_month', action="store_false", help='Boolean to use current month as date range for data retrieval')
     args = parser.parse_args()
 
-    upload_success, no_files, latest_timestamp = main(yaml_path=args.yaml_path,
+    params = get_params(yaml_path=args.yaml_path)
+    cds_params = params['cds']
+    shared_params = params['shared_params']
+
+    upload_success, no_files, latest_timestamp = main(cds_params=cds_params, shared_params=shared_params,
                                                       log_level=args.log_level, direct_upload=args.direct_upload,
                                                       current_month=args.current_month)
-    draft_and_send_email(upload_success=upload_success, yaml_path=args.yaml_path,
-                         no_files=no_files, latest_timestamp=latest_timestamp)
+    data_upload_email(upload_success=upload_success, recipients=shared_params['email_recipients'],
+                      dataset_name=cds_params['ds_name'].replace('_', ' '), dataset_source=cds_params['ds_source'],
+                      no_files=no_files, latest_timestamp=latest_timestamp)

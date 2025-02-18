@@ -76,11 +76,8 @@ def send_email(recipients: dict, subject: str, body: str, config: dict,
         raise
 
 
-def draft_and_send_email(upload_success: bool, yaml_path: str, no_files: int,
-                         latest_timestamp: datetime, attachment: bool = False):
-    params = get_params(yaml_path=yaml_path)
-    recipients = params['email_recipients']
-    dataset_name = params['dataset_name']
+def data_upload_email(upload_success: bool, recipients: dict, dataset_name: str, dataset_source: str,
+                        no_files: int, latest_timestamp: datetime, attachment: bool = False):
     load_dotenv()
     config = {
         'SMTP_SERVER': os.getenv('SMTP_SERVER'),
@@ -103,7 +100,7 @@ def draft_and_send_email(upload_success: bool, yaml_path: str, no_files: int,
         body = (
             f"Hello,\n"
             f"This is a system generated email. All {no_files} files obtained from {dataset_name} "
-            f"have been successfully uploaded to S3 on {current_date}.\n"
+            f"on {dataset_source} have been successfully uploaded to S3 on {current_date}.\n"
             f"The last timestamp of data availability for {dataset_name} is {latest_timestamp} UTC, "
             f"when checked at approximately {current_timestamp} UTC.\n"
             f"Detailed health of the run can be found in the debug log file for the "
@@ -115,7 +112,7 @@ def draft_and_send_email(upload_success: bool, yaml_path: str, no_files: int,
         body = (
             f"Hello,\n"
             f"This is a system generated email. One or more files from {dataset_name} "
-            f"have failed to upload to S3 on {current_date}.\n"
+            f"on {dataset_source} have failed to upload to S3 on {current_date}.\n"
             f"The last timestamp of data availability for {dataset_name} is {latest_timestamp} UTC, "
             f"when checked at approximately {current_timestamp} UTC.\n"
             f"Detailed health of the run can be found in the attached debug log file."
