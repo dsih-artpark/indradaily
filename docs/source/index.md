@@ -13,6 +13,7 @@ This documentation is under construction. Please check back soon for updates.
 
 getting_started.md
 usage/index.md
+contributing.md
 api/index.md
 LICENSE.rst
 ``` 
