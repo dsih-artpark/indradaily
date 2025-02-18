@@ -3,6 +3,7 @@ from pathlib import Path
 
 import indrafetch
 from dotenv import load_dotenv
+
 from indradaily import get_params, set_custom_loggers
 from indradaily.emails import data_upload_email
 
@@ -18,11 +19,11 @@ def main(*, cds_params: dict, shared_params: dict, current_month: bool=True, dir
         end_date = latest_timestamp.strftime("%Y-%m-%d")
         cds_params["start_date"] = start_date
         cds_params["end_date"] = end_date
-    
+
     upload_successes = []
     total_no_files = 0
 
-    for i, region in enumerate(cds_params['bounds_nwse'].keys()):
+    for _i, region in enumerate(cds_params['bounds_nwse'].keys()):
         s3_prefix = f"{cds_params['ds_id']}-{cds_params['ds_name']}/{cds_params['folder_name']}/{region.upper()}"
         local_region_dir = Path(shared_params['local_data_dir']).expanduser() / Path(shared_params['s3_bucket']) / Path(s3_prefix)
         local_region_dir.mkdir(parents=True, exist_ok=True)
@@ -66,3 +67,5 @@ if __name__ == "__main__":
     data_upload_email(upload_success=upload_success, recipients=shared_params['email_recipients'],
                       dataset_name=cds_params['ds_name'].replace('_', ' '), dataset_source=cds_params['ds_source'],
                       no_files=no_files, latest_timestamp=latest_timestamp)
+
+__all__ = ["main"]

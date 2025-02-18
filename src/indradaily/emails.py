@@ -11,13 +11,35 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-from indradaily import get_params
-
 logger = logging.getLogger(__name__)
 
 def send_email(recipients: dict, subject: str, body: str, config: dict,
                attachment: bool = False, attachment_path: Optional[str] = None,
                from_name: Optional[str] = "Automatic Notifications | DSIH Admin"):
+    """
+    Send an email to the recipients with the given subject and body.
+
+    :param recipients: dict
+        A dictionary of recipients with email addresses as keys and names as values.
+    :param subject: str
+        The subject of the email.
+    :param body: str
+        The body of the email.
+    :param config: dict
+        A dictionary of configuration parameters for the email.
+    :param attachment: bool
+        A boolean flag indicating whether to attach a file to the email.
+    :param attachment_path: Optional[str]
+        The path to the file to attach to the email.
+    :param from_name: Optional[str]
+        The name of the sender of the email.
+
+    :return: bool
+        A boolean flag indicating whether the email was sent successfully.
+
+    :raises Exception:
+        If the email fails to send, an exception is raised.
+    """
 
     logger.info("Starting to send email")
 
@@ -124,3 +146,5 @@ def data_upload_email(upload_success: bool, recipients: dict, dataset_name: str,
                attachment=attachment, attachment_path=attachment_path)
 
     return True
+
+__all__ = ["data_upload_email", "send_email"]

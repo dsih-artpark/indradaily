@@ -1,15 +1,40 @@
 import argparse
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import indrafetch
 from dotenv import load_dotenv
+
 from indradaily import get_params, set_custom_loggers
 from indradaily.emails import data_upload_email
-from datetime import datetime
 
 
-def main(*, get_latest_date: bool=True, custom_date: Optional[datetime]=None, shared_params: dict, ecpds_params: dict, direct_upload: bool=False, log_level: str='DEBUG'):
+def main(*, get_latest_date: bool=True, custom_date: Optional[datetime]=None, shared_params: dict, ecpds_params: dict,
+         direct_upload: bool=False, log_level: str='DEBUG'):
+    """
+    Main function to retrieve and upload ECPDS data to S3.
+
+    :param get_latest_date: bool
+        If True, retrieve the latest date of the data available in the ECPDS.
+    :param custom_date: Optional[datetime]
+        The date to retrieve data for, format: YYYY-MM-DD.
+    :param shared_params: dict
+        A dictionary of shared parameters.
+    :param ecpds_params: dict
+        A dictionary of ECPDS parameters.
+    :param direct_upload: bool
+        If True, directly upload the data to S3.
+    :param log_level: str
+        The log level to use for the logger.
+
+    :return: tuple
+        A tuple containing the upload success, the number of files uploaded, and the latest date of the data available in the ECPDS.
+
+    :raises Exception:
+        If the data fails to upload, an exception is raised.
+    """
+
     loggers_config = set_custom_loggers(level=log_level)
     indrafetch.setup_logging(loggers_config=loggers_config, default_level=log_level)
 
@@ -25,7 +50,8 @@ def main(*, get_latest_date: bool=True, custom_date: Optional[datetime]=None, sh
                                             resolution=ecpds_params['resolution'],
                                             model=ecpds_params['model'], forecast_type=ecpds_params['forecast_type'],
                                             forecast_times=ecpds_params['forecast_times'],
-                                            raise_error=ecpds_params['raise_error'], chunk=ecpds_params['chunk'], chunk_size=ecpds_params['chunk_size'])
+                                            raise_error=ecpds_params['raise_error'], chunk=ecpds_params['chunk'],
+                                            chunk_size=ecpds_params['chunk_size'])
 
 
     upload_success = [None] * len(ecpds_params['extensions'])
@@ -45,7 +71,7 @@ def main(*, get_latest_date: bool=True, custom_date: Optional[datetime]=None, sh
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process ECPDS daily data')
-    parser.add_argument('-g', '--get_latest_date', action="store_false", help='Boolean, if true, get the latest date of the data available in the ECPDS')
+    parser.add_argument('-g', '--get_latest_date', action="store_false", help='Boolean to get latest date of data available in ECPDS')
     parser.add_argument('-y', '--yaml_path', required=True, help='Path to YAML configuration file')
     parser.add_argument('-l', '--log_level', required=False, help='Log level', default='DEBUG')
     parser.add_argument('-d', '--direct_upload', action="store_true", help='Boolean to directly upload to s3, useful for testing')
@@ -61,7 +87,10 @@ if __name__ == "__main__":
     else:
         custom_date = None
 
-    upload_success, no_files, latest_date = main(get_latest_date=args.get_latest_date, custom_date=custom_date, shared_params=shared_params, ecpds_params=ecpds_params, direct_upload=args.direct_upload)
+    upload_success, no_files, latest_date = main(get_latest_date=args.get_latest_date, custom_date=custom_date, shared_params=shared_params,
+                                                 ecpds_params=ecpds_params, direct_upload=args.direct_upload)
     data_upload_email(upload_success=upload_success, recipients=shared_params['email_recipients'],
                       dataset_name=ecpds_params['ds_name'].replace('_', ' '), dataset_source=ecpds_params['ds_source'],
                       no_files=no_files, latest_timestamp=latest_date)
+
+__all__ = ["main"]
