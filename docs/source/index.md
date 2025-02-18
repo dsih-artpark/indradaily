@@ -11,6 +11,8 @@ This documentation is under construction. Please check back soon for updates.
 ```{toctree}
 :maxdepth: 3
 
-LICENSE.rst
+getting_started.md
+usage/index.md
 api/index.md
+LICENSE.rst
 ``` 

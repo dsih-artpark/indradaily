@@ -1,4 +1,4 @@
-# Indradaily
+# Indradaily - Getting Started
 Indradaily is a Python package designed to fetch and process ERA5 reanalysis data for specific regions and upload the processed data to an S3 bucket.
 
 ## Installation
@@ -20,23 +20,49 @@ poetry install
 
 ### Configuration
 
-The configuration for the data retrieval is specified in a YAML file. Below is an example configuration (`era5_daily_params.yaml`):
+The configuration for the data retrieval is specified in a YAML file. Below is an example configuration:
 
 ```yaml
-region: "ka"
-bounds_nwse:
+shared_params:
+  local_data_dir: "~/.data-folder/"
+  email_recipients:
+    "sample@example.com": "Sample User"
+  s3_bucket: 'sample-s3-bucket'
+
+
+cds:
+  cds_dataset_name: "reanalysis-era5-single-levels"
+  bounds_nwse:
     ka: [19,74,11,79]
-variables:
+  variables:
     "2m_temperature": "2t"
     "2m_dewpoint_temperature": "2d"
     "total_precipitation": "tp"
     "10m_u_component_of_wind": "10u"
     "10m_v_component_of_wind": "10v"
-output_dir: ".dsih-data/era5"
-start_date: "2025-01-01"
-end_date: "2025-01-01"
-s3_bucket: "dsih-artpark-03-standardised-data"
-s3_prefix: "MW0016DS0046-ERA5_Reanalysis_Single_Level/all_india_netcdf"
+  start_date: None
+  end_date: None
+ds_id: 'dsid_cds'
+  ds_name: "ERA5_Reanalysis_Single_Level"
+  folder_name: "all_india_netcdf"
+  ds_source: "ECMWF CDS"
+  extension: "nc"
+
+ecpds:
+  url: 'https://data.ecmwf.int/forecasts'
+  zulu_utc_timestamp: '00z'
+  resolution: '0p25'
+  model: 'ifs'
+  forecast_type: 'oper'
+  forecast_times: ["0h", "6h"]
+  raise_error: true
+  chunk: true
+  chunk_size: 1048576
+  ds_id: 'dsid_ecpds'
+  ds_name: 'ECPDS_Operational_Forecasts'
+  folder_name: '00z_ifs_0p25_oper'
+  ds_source: 'ECMWF ECPDS'
+  extensions: ["grib2", "index"]
 ```
 
 ### Running the Script
