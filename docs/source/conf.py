@@ -88,5 +88,5 @@ html_theme_options: Dict[str, Any] = {
     ],
     "source_repository": "https://github.com/dsih-artpark/indradaily",
     "source_branch": "production",
-    "source_directory": "docs/",
+    "source_directory": "docs/source",
 }
